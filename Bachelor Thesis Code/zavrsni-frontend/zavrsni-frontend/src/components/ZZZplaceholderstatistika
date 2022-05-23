@@ -1,0 +1,94 @@
+import React, { PureComponent } from 'react';
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Sector} from 'recharts';
+
+const data = [
+  { name: 'Petrol', value: 42085 },
+  { name: 'Crodux', value: 35400 },
+];
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const RADIAN = Math.PI / 180;
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+
+
+const racun_data = [
+  {
+    name: 'Račun 1',
+    Ukupna_cijena: 37385,
+    amt: 2400,
+  },
+  {
+    name: 'Račun 25',
+    Ukupna_cijena: 4700,
+    pv: 1398,
+    amt: 2210,
+  },
+];
+
+export default class ZzStatistikaComponent extends PureComponent {
+
+  render() {
+    return (
+      <div>
+        <br />
+        <h3>Promet po računima - Petrol</h3>
+      <ResponsiveContainer width="100%" aspect={4}>
+        <BarChart
+          width={500}
+          height={300}
+          data={racun_data}
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="Ukupna_cijena" fill="#8884d8" />
+        </BarChart>
+      </ResponsiveContainer>
+
+      <br />
+      <h3>Usporedba prometa po partnerima</h3>
+      <ResponsiveContainer width="100%" aspect={3}>
+        <PieChart width={400} height={400}>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={renderCustomizedLabel}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+
+      </div>
+      
+    );
+  }
+}

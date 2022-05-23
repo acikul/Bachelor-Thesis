@@ -1,0 +1,368 @@
+CREATE TABLE Radno_mjesto
+(
+  sifRadnoMjesto SERIAL NOT NULL,
+  nazivRadnoMjesto VARCHAR(100) NOT NULL,
+  PRIMARY KEY (sifRadnoMjesto)
+);
+
+CREATE TABLE Drzava
+(
+  sifDrzava SERIAL NOT NULL,
+  nazivDrzava VARCHAR(100) NOT NULL,
+  PRIMARY KEY (sifDrzava)
+);
+
+CREATE TABLE Proizvodac
+(
+  sifProizvodac SERIAL NOT NULL,
+  nazivProizvodac VARCHAR(100) NOT NULL,
+  PRIMARY KEY (sifProizvodac)
+);
+
+CREATE TABLE Proizvod
+(
+  sifProizvod SERIAL NOT NULL,
+  barkod VARCHAR(10) NOT NULL,
+  nazivProizvod VARCHAR(100) NOT NULL,
+  mjera VARCHAR(100) NOT NULL,
+  vrsta VARCHAR(100) NOT NULL,
+  podgrupa VARCHAR(100) NOT NULL,
+  kolicinaUkutiji INT NOT NULL,
+  masa FLOAT NOT NULL,
+  cijena FLOAT NOT NULL,
+  sifProizvodac INT,
+  PRIMARY KEY (sifProizvod),
+  FOREIGN KEY (sifProizvodac) REFERENCES Proizvodac(sifProizvodac),
+  UNIQUE (barkod)
+);
+
+CREATE TABLE Zupanija
+(
+  sifZupanija SERIAL NOT NULL,
+  nazivZupanija VARCHAR(100) NOT NULL,
+  sifDrzava INT NOT NULL,
+  PRIMARY KEY (sifZupanija),
+  FOREIGN KEY (sifDrzava) REFERENCES Drzava(sifDrzava)
+);
+
+CREATE TABLE Grad
+(
+  sifGrad SERIAL NOT NULL,
+  nazivGrad VARCHAR(100) NOT NULL,
+  sifZupanija INT NOT NULL,
+  PRIMARY KEY (sifGrad),
+  FOREIGN KEY (sifZupanija) REFERENCES Zupanija(sifZupanija)
+);
+
+CREATE TABLE Skladiste
+(
+  sifSkladiste SERIAL NOT NULL,
+  povrsina FLOAT NOT NULL,
+  nazivSkladiste VARCHAR(100) NOT NULL,
+  sifGrad INT NOT NULL,
+  adresaSkladiste VARCHAR(100),
+  PRIMARY KEY (sifSkladiste),
+  FOREIGN KEY (sifGrad) REFERENCES Grad(sifGrad)
+);
+
+CREATE TABLE Ima_Na_Stanju
+(
+  kolicinaStanje INT NOT NULL,
+  sifSkladiste INT NOT NULL,
+  sifProizvod INT NOT NULL,
+  PRIMARY KEY (sifSkladiste, sifProizvod),
+  FOREIGN KEY (sifSkladiste) REFERENCES Skladiste(sifSkladiste),
+  FOREIGN KEY (sifProizvod) REFERENCES Proizvod(sifProizvod)
+);
+
+CREATE TABLE Poslovni_partner
+(
+  sifPartner SERIAL NOT NULL,
+  nazivPartner VARCHAR(100) NOT NULL,
+  odgoda INT NOT NULL,
+  brojTelPartner VARCHAR(15) NOT NULL,
+  sifGrad INT NOT NULL,
+  adresaSjediste VARCHAR(100),
+  PRIMARY KEY (sifPartner),
+  FOREIGN KEY (sifGrad) REFERENCES Grad(sifGrad)
+);
+
+CREATE TABLE Zaposlenik
+(
+  oibZaposlenik VARCHAR(11) NOT NULL,
+  ime VARCHAR(100) NOT NULL,
+  prezime VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  brojTel VARCHAR(15) NOT NULL,
+  datumRod DATE NOT NULL,
+  datumPoc DATE NOT NULL,
+  datumKraj DATE NOT NULL,
+  sifZaposlenik SERIAL NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  sifRadnoMjesto INT NOT NULL,
+  sifGrad INT NOT NULL,
+  adresaZaposlenik VARCHAR(100),
+  PRIMARY KEY (sifZaposlenik),
+  FOREIGN KEY (sifRadnoMjesto) REFERENCES Radno_mjesto(sifRadnoMjesto),
+  FOREIGN KEY (sifGrad) REFERENCES Grad(sifGrad),
+  UNIQUE (oibZaposlenik),
+  UNIQUE (email)
+);
+
+CREATE TABLE Poslovnica
+(
+  sifPoslovnica SERIAL NOT NULL,
+  nazivPoslovnica VARCHAR(100) NOT NULL,
+  brojTelPoslovnica VARCHAR(15) NOT NULL,
+  sifPartner INT NOT NULL,
+  sifGrad INT NOT NULL,
+  adresaPoslovnica VARCHAR(100),
+  PRIMARY KEY (sifPoslovnica),
+  FOREIGN KEY (sifPartner) REFERENCES Poslovni_partner(sifPartner),
+  FOREIGN KEY (sifGrad) REFERENCES Grad(sifGrad)
+);
+
+CREATE TABLE Racun
+(
+  sifRacun SERIAL NOT NULL,
+  datumRacun DATE NOT NULL,
+  valutaRacun VARCHAR(50) NOT NULL,
+  placen INT NOT NULL,
+  sifSkladiste INT NOT NULL,
+  sifPoslovnica INT NOT NULL,
+  sifZaposlenik INT NOT NULL,
+  PRIMARY KEY (sifRacun),
+  FOREIGN KEY (sifSkladiste) REFERENCES Skladiste(sifSkladiste),
+  FOREIGN KEY (sifPoslovnica) REFERENCES Poslovnica(sifPoslovnica),
+  FOREIGN KEY (sifZaposlenik) REFERENCES Zaposlenik(sifZaposlenik)
+);
+
+CREATE TABLE Primka
+(
+  sifPrimka SERIAL NOT NULL,
+  datumPrimka DATE NOT NULL,
+  valutaPrimka VARCHAR(50) NOT NULL,
+  sifSkladiste INT NOT NULL,
+  sifPartner INT NOT NULL,
+  PRIMARY KEY (sifPrimka),
+  FOREIGN KEY (sifSkladiste) REFERENCES Skladiste(sifSkladiste),
+  FOREIGN KEY (sifPartner) REFERENCES Poslovni_partner(sifPartner)
+);
+
+CREATE TABLE Stavka_Primke
+(
+  kolicinaProizvodPrimka INT NOT NULL,
+  kupovnaCijena FLOAT NOT NULL,
+  sifPrimka INT NOT NULL,
+  sifProizvod INT NOT NULL,
+  PRIMARY KEY (sifPrimka, sifProizvod),
+  FOREIGN KEY (sifPrimka) REFERENCES Primka(sifPrimka) ON DELETE CASCADE,
+  FOREIGN KEY (sifProizvod) REFERENCES Proizvod(sifProizvod)
+);
+
+CREATE TABLE Stavka_Racuna
+(
+  kolicinaProizvodRacun INT NOT NULL,
+  sifProizvod INT NOT NULL,
+  sifRacun INT NOT NULL,
+  PRIMARY KEY (sifProizvod, sifRacun),
+  FOREIGN KEY (sifProizvod) REFERENCES Proizvod(sifProizvod) ON DELETE CASCADE,
+  FOREIGN KEY (sifRacun) REFERENCES Racun(sifRacun)
+);
+
+CREATE TABLE Rabat
+(
+  iznosRabat FLOAT NOT NULL,
+  sifProizvod INT NOT NULL,
+  sifPartner INT NOT NULL,
+  PRIMARY KEY (sifProizvod, sifPartner),
+  FOREIGN KEY (sifProizvod) REFERENCES Proizvod(sifProizvod) ON DELETE CASCADE,
+  FOREIGN KEY (sifPartner) REFERENCES Poslovni_partner(sifPartner) ON DELETE CASCADE
+);
+
+
+_____________________________________________________________________________________________________________________
+
+CREATE OR REPLACE FUNCTION sync_stanje_insert() RETURNS trigger AS 
+$$
+   BEGIN
+	UPDATE ima_na_stanju
+	SET kolicinastanje = kolicinastanje - NEW.kolicinaproizvodracun
+	FROM racun
+	WHERE 	sifproizvod = NEW.sifproizvod
+		AND racun.sifracun = NEW.sifracun
+		AND ima_na_stanju.sifskladiste = racun.sifskladiste;
+	
+	IF ((SELECT kolicinastanje 
+		FROM ima_na_stanju JOIN racun ON ima_na_stanju.sifskladiste = racun.sifskladiste
+		WHERE sifproizvod = NEW.sifproizvod AND sifracun = NEW.sifracun)
+		< 0) THEN
+		RAISE EXCEPTION 'Error: stanje proizvoda ne moze biti negativno';
+		RETURN NULL;
+	ELSE 
+		RETURN NEW;
+     	END IF;
+   END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ins_sync_stanje
+	BEFORE INSERT ON stavka_racuna
+	FOR EACH ROW
+	WHEN (NEW.kolicinaproizvodracun <> 0)
+	EXECUTE PROCEDURE sync_stanje_insert();
+
+
+_____________________________________________________________________________________________________________________
+
+
+
+CREATE OR REPLACE FUNCTION sync_stanje_delete() RETURNS trigger AS 
+$$
+   BEGIN
+	UPDATE ima_na_stanju
+	SET kolicinastanje = kolicinastanje + OLD.kolicinaproizvodracun
+	FROM racun
+	WHERE sifproizvod = OLD.sifproizvod
+		AND racun.sifracun = OLD.sifracun
+		AND ima_na_stanju.sifskladiste = racun.sifskladiste;
+	RETURN OLD;
+   END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER del_sync_stanje
+	BEFORE DELETE ON stavka_racuna
+	FOR EACH ROW
+	WHEN (OLD.kolicinaproizvodracun <> 0)
+	EXECUTE PROCEDURE sync_stanje_delete();
+
+
+_____________________________________________________________________________________________________________________
+
+
+
+CREATE OR REPLACE FUNCTION sync_stanje_update() RETURNS trigger AS 
+$$
+   BEGIN
+	UPDATE ima_na_stanju
+	SET kolicinastanje = kolicinastanje - (NEW.kolicinaproizvodracun - OLD.kolicinaproizvodracun)
+	FROM racun
+	WHERE ima_na_stanju.sifproizvod = OLD.sifproizvod
+		AND racun.sifracun = OLD.sifracun
+		AND ima_na_stanju.sifskladiste = racun.sifskladiste;
+
+	IF ((SELECT kolicinastanje 
+		FROM ima_na_stanju JOIN racun ON ima_na_stanju.sifskladiste = racun.sifskladiste
+		WHERE sifproizvod = NEW.sifproizvod AND sifracun = NEW.sifracun)
+		< 0) THEN
+		RAISE EXCEPTION 'Error: stanje proizvoda ne moze biti negativno';
+		RETURN NULL;
+	ELSE 
+		RETURN NEW;
+     	END IF;
+   END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER upd_sync_stanje
+	BEFORE UPDATE OF kolicinaproizvodracun ON stavka_racuna
+	FOR EACH ROW
+	WHEN (OLD.kolicinaproizvodracun <> NEW.kolicinaproizvodracun)
+	EXECUTE PROCEDURE sync_stanje_update();
+
+
+
+_____________________________________________________________________________________________________________________
+_____________________________________________________________________________________________________________________
+_____________________________________________________________________________________________________________________
+
+
+
+
+CREATE OR REPLACE FUNCTION sync_stanje_insert_primka() RETURNS trigger AS 
+$$
+   BEGIN
+	UPDATE ima_na_stanju
+	SET kolicinastanje = kolicinastanje + NEW.kolicinaproizvodprimka
+	FROM primka
+	WHERE 	sifproizvod = NEW.sifproizvod
+		AND primka.sifprimka = NEW.sifprimka
+		AND ima_na_stanju.sifskladiste = primka.sifskladiste;
+	RETURN NEW;
+   END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ins_primka_sync_stanje
+	BEFORE INSERT ON stavka_primke
+	FOR EACH ROW
+	WHEN (NEW.kolicinaproizvodprimka <> 0)
+	EXECUTE PROCEDURE sync_stanje_insert_primka();
+
+
+_____________________________________________________________________________________________________________________
+
+
+
+CREATE OR REPLACE FUNCTION sync_stanje_delete_primka() RETURNS trigger AS 
+$$
+   BEGIN
+	UPDATE ima_na_stanju
+	SET kolicinastanje = kolicinastanje - OLD.kolicinaproizvodprimka
+	FROM primka
+	WHERE sifproizvod = OLD.sifproizvod
+		AND primka.sifprimka = OLD.sifprimka
+		AND ima_na_stanju.sifskladiste = primka.sifskladiste;
+	
+	IF ((SELECT kolicinastanje 
+		FROM ima_na_stanju JOIN primka ON ima_na_stanju.sifskladiste = primka.sifskladiste
+		WHERE sifproizvod = OLD.sifproizvod AND sifprimka = OLD.sifprimka)
+		< 0) THEN
+		RAISE EXCEPTION 'Error: stanje proizvoda ne moze biti negativno';
+		RETURN NULL;
+	ELSE 
+		RETURN OLD;
+     	END IF;
+
+   END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER del_primka_sync_stanje
+	BEFORE DELETE ON stavka_primke
+	FOR EACH ROW
+	WHEN (OLD.kolicinaproizvodprimka <> 0)
+	EXECUTE PROCEDURE sync_stanje_delete_primka();
+
+
+_____________________________________________________________________________________________________________________
+
+
+
+CREATE OR REPLACE FUNCTION sync_stanje_update_primka() RETURNS trigger AS 
+$$
+   BEGIN
+	UPDATE ima_na_stanju
+	SET kolicinastanje = kolicinastanje + (NEW.kolicinaproizvodprimka - OLD.kolicinaproizvodprimka)
+	FROM primka
+	WHERE ima_na_stanju.sifproizvod = OLD.sifproizvod
+		AND primka.sifprimka = OLD.sifprimka
+		AND ima_na_stanju.sifskladiste = primka.sifskladiste;
+
+	IF ((SELECT kolicinastanje 
+		FROM ima_na_stanju JOIN primka ON ima_na_stanju.sifskladiste = primka.sifskladiste
+		WHERE sifproizvod = NEW.sifproizvod AND sifprimka = NEW.sifprimka)
+		< 0) THEN
+		RAISE EXCEPTION 'Error: stanje proizvoda ne moze biti negativno';
+		RETURN NULL;
+	ELSE 
+		RETURN NEW;
+     	END IF;
+   END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER upd_primka_sync_stanje
+	BEFORE UPDATE OF kolicinaproizvodprimka ON stavka_primke
+	FOR EACH ROW
+	WHEN (OLD.kolicinaproizvodprimka <> NEW.kolicinaproizvodprimka)
+	EXECUTE PROCEDURE sync_stanje_update_primka();
+
+
+
+_____________________________________________________________________________________________________________________
